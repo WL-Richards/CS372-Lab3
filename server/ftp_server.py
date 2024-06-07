@@ -16,8 +16,6 @@ PASSWORD = "HelloWorld"
 intro_message = "Hello! Welcome to my (richawil & milfordc's) server! We are majoring in CS and ECE respectively\n"
 
 async def sendMessage(writer, message):
-    if message[len(message) - 1] != '\n':
-        message += '\n'
     writer.write(message.encode())
     await writer.drain()
 
@@ -47,7 +45,7 @@ async def passwordLogin(reader, writer):
             break
         else:
             print(f"Incorrect password {i+1}/3")
-            await sendMessage(writer, "NAK Incorrect Password")
+            await sendMessage(writer, "NAK Incorrect Password\n")
     
     return loginSuccess
 
@@ -57,48 +55,49 @@ async def handleCommands(reader, writer):
             command = await receive_long_message(reader)
             # If the list command is used
             if command == "list":
-                fileList = "\n".join(os.listdir("."))
-                await sendMessage(writer, "ACK")
+                fileList = ":".join(os.listdir("."))
+                fileList += "\n"
+                await sendMessage(writer, "ACK\n")
                 await sendMessage(writer, fileList)
             
             # If we are downloading a file from the server
             elif command.startswith("put"):
                 splitCommand = command.split(" ")
-                await sendMessage(writer, "ACK")
+                await sendMessage(writer, "ACK\n")
                 with open(splitCommand[1], 'w') as file:
                         length = file.write(await receive_long_message(reader))
                         if length > 0:
-                            await sendMessage(writer, "ACK")
+                            await sendMessage(writer, "ACK\n")
                         else:
-                            await sendMessage(writer, "Failed to write files")
+                            await sendMessage(writer, "Failed to write files\n")
                         
             # If we are downloading a file from the server
             elif command.startswith("get"):
                 splitCommand = command.split(" ")
                 if os.path.exists(splitCommand[1]):
-                    await sendMessage(writer, "ACK")
+                    await sendMessage(writer, "ACK\n")
                     with open(splitCommand[1], 'r') as file:
-                        await sendMessage(writer, file.read())
+                        await sendMessage(writer, file.read() + "\n")
                 else:
-                    await sendMessage(writer, "NAK File does not exist")
+                    await sendMessage(writer, "NAK File does not exist\n")
             
             # If we are removing a file on the server
             elif command.startswith("remove"):
                 splitCommand = command.split(" ")
                 if os.path.exists(splitCommand[1]):
-                    await sendMessage(writer, "ACK")
+                    await sendMessage(writer, "ACK\n")
                     os.remove(splitCommand[1])
                 else:
-                    await sendMessage(writer, "NAK File does not exist")
+                    await sendMessage(writer, "NAK File does not exist\n")
 
             # If we are attempting to close the connection
             elif command == "close":
-                await sendMessage(writer, "ACK")
+                await sendMessage(writer, "ACK\n")
                 writer.close()
                 await writer.wait_closed()
                 break
             else:
-                await sendMessage(writer, "NAK Invalid Command")
+                await sendMessage(writer, "NAK Invalid Command\n")
 
         except KeyboardInterrupt:
             break

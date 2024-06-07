@@ -57,15 +57,14 @@ async def ftpOptions(reader, writer):
     while True:
         try:
             option = input("> ")
-            await send_long_message(writer, option)
             option = option.strip()
 
-            
             # Check if file exists
             if option.startswith("put") and not os.path.exists(option.split(" ")[1]):
                 print("No file exists")
                 continue
 
+            await send_long_message(writer, option)
             response = (await recv_message(reader)).strip()
             # If we wanted to close and the server responded with an ack we should exit our loop
             if option == "close" and response.startswith("ACK"):
@@ -74,7 +73,7 @@ async def ftpOptions(reader, writer):
             # If we were trying to list the files we should check if our initial response was an ack and then we should receive the list of files
             if option == "list":
                 if response == "ACK":
-                    print(await recv_message(reader))     
+                    print("\n".join((await recv_message(reader)).split(":")))     
                 
             # Download files from the server
             elif option.startswith("get"):
